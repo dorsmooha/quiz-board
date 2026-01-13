@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>לוח חידון</title>
+  <style>
+    body { margin:0; font-family: system-ui, Arial; background:#0b1220; color:#e8eefc; }
+    header { display:flex; gap:12px; align-items:center; justify-content:space-between; padding:16px 20px; }
+    .btn { background:#1f2a44; color:#e8eefc; border:1px solid #2b3a60; padding:10px 12px; border-radius:10px; cursor:pointer; }
+    .btn:hover { filter:brightness(1.1); }
+    .wrap { padding: 0 20px 20px; }
+    .grid { display:grid; grid-template-columns: 140px repeat(auto-fit, minmax(160px, 1fr)); gap:12px; }
+    .cell, .hdr, .rowhdr { border:1px solid #2b3a60; border-radius:14px; padding:14px; background:#121b2e; }
+    .hdr { background:#0f1730; font-weight:700; text-align:center; }
+    .rowhdr { background:#0f1730; font-weight:700; display:flex; align-items:center; justify-content:center; }
+    .cell { cursor:pointer; text-align:center; font-size:22px; font-weight:800; }
+    .cell:hover { outline:2px solid #4c6fff; }
+    .used { opacity:.35; cursor:not-allowed; }
+    .modalback { position:fixed; inset:0; background: rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; padding:18px; }
+    .modal { width:min(900px, 96vw); background:#0f1730; border:1px solid #2b3a60; border-radius:18px; padding:18px; }
+    .modal h2 { margin:0 0 10px; font-size:22px; }
+    .items { margin:12px 0; display:flex; flex-wrap:wrap; gap:10px; }
+    .pill { background:#121b2e; border:1px solid #2b3a60; padding:10px 12px; border-radius:999px; }
+    .answer { display:none; margin-top:12px; border-top:1px solid #2b3a60; padding-top:12px; }
+    .meta { opacity:.8; font-size:14px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div style="font-weight:900; font-size:18px;">לוח החידון</div>
+      <div class="meta" id="meta"></div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn" id="fsBtn">מסך מלא</button>
+      <button class="btn" id="resetBtn">איפוס משחק</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="grid" id="board"></div>
+  </div>
+
+  <div class="modalback" id="modalBack">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+        <div>
+          <h2 id="qTitle"></h2>
+          <div class="meta" id="qMeta"></div>
+        </div>
+        <button class="btn" id="closeBtn">סגור</button>
+      </div>
+
+      <div class="items" id="qItems"></div>
+
+      <button class="btn" id="toggleAnswerBtn">הצג תשובה</button>
+
+      <div class="answer" id="answerBox">
+        <div style="font-weight:800; margin-bottom:8px;">התשובה (הסדר הנכון):</div>
+        <div class="items" id="qAnswer"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // הקטגוריות ייקבעו לפי קובץ השאלות בהמשך
+  const levels = [3,4,5,6];
+
+  // שאלות לדוגמה זמניות (נחליף בקובץ נפרד)
+  const questions = [
+    {
+      id:"demo-geo-3",
+      category:"גאוגרפיה",
+      difficulty:3,
+      prompt:"סדר את הערים מצפון לדרום:",
+      items:["חיפה","תל אביב","ירושלים","באר שבע"],
+      answer:["חיפה","תל אביב","ירושלים","באר שבע"]
+    }
+  ];
+
+  const categories = [...new Set(questions.map(q => q.category))];
+
+  const STORAGE_KEY = "quiz_used_ids_v1";
+  let usedIds = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"));
+  let currentQ = null;
+
+  const boardEl = document.getElementById("board");
+  const modalBack = document.getElementById("modalBack");
+  const qTitle = document.getElementById("qTitle");
+  const qMeta = document.getElementById("qMeta");
+  const qItems = document.getElementById("qItems");
+  const qAnswer = document.getElementById("qAnswer");
+  const answerBox = document.getElementById("answerBox");
+  const toggleAnswerBtn = document.getElementById("toggleAnswerBtn");
+  const meta = document.getElementById("meta");
+
+  function saveUsed() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...usedIds]));
+    meta.textContent = `נלקחו: ${usedIds.size}`;
+  }
+
+  function firstAvailable(category, difficulty) {
+    return questions.find(q => q.category===category && q.difficulty===difficulty && !usedIds.has(q.id)) || null;
+  }
+
+  function renderBoard() {
+    boardEl.innerHTML = "";
+
+    const corner = document.createElement("div");
+    corner.className = "hdr";
+    boardEl.appendChild(corner);
+
+    for (const c of categories) {
+      const h = document.createElement("div");
+      h.className = "hdr";
+      h.textContent = c;
+      boardEl.appendChild(h);
+    }
+
+    for (const lvl of levels) {
+      const r = document.createElement("div");
+      r.className = "rowhdr";
+      r.textContent = lvl;
+      boardEl.appendChild(r);
+
+      for (const c of categories) {
+        const q = firstAvailable(c, lvl);
+        const cell = document.createElement("div");
+        cell.className = "cell";
+
+        if (!q) {
+          cell.classList.add("used");
+          cell.textContent = "—";
+        } else {
+          cell.textContent = lvl;
+          cell.onclick = () => openQuestion(q);
+        }
+
+        boardEl.appendChild(cell);
+      }
+    }
+  }
+
+  function openQuestion(q) {
+    currentQ = q;
+    usedIds.add(q.id);
+    saveUsed();
+    renderBoard();
+
+    qTitle.textContent = q.prompt;
+    qMeta.textContent = `${q.category} | קושי ${q.difficulty}`;
+    qItems.innerHTML = q.items.map(x => `<div class="pill">${x}</div>`).join("");
+    qAnswer.innerHTML = q.answer.map(x => `<div class="pill">${x}</div>`).join("");
+
+    answerBox.style.display = "none";
+    toggleAnswerBtn.textContent = "הצג תשובה";
+
+    modalBack.style.display = "flex";
+  }
+
+  function closeModal() {
+    modalBack.style.display = "none";
+  }
+
+  document.getElementById("closeBtn").onclick = closeModal;
+  modalBack.addEventListener("click", (e) => { if (e.target === modalBack) closeModal(); });
+
+  toggleAnswerBtn.onclick = () => {
+    const shown = answerBox.style.display === "block";
+    answerBox.style.display = shown ? "none" : "block";
+    toggleAnswerBtn.textContent = shown ? "הצג תשובה" : "הסתר תשובה";
+  };
+
+  document.getElementById("resetBtn").onclick = () => {
+    usedIds = new Set();
+    saveUsed();
+    renderBoard();
+    closeModal();
+  };
+
+  document.getElementById("fsBtn").onclick = async () => {
+    if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+    else await document.exitFullscreen();
+  };
+
+  saveUsed();
+  renderBoard();
+</script>
+</body>
+</html>
