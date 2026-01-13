@@ -74,7 +74,7 @@
       border-radius:22px;
       padding:18px 14px;
       text-align:center;
-      font-size:46px;
+      font-size:56px;
       font-weight:900;
       letter-spacing: .6px;
       margin-bottom: 18px;
@@ -137,8 +137,8 @@
       transform: rotate(18deg);
       pointer-events:none;
     }
-    .cat .name{ font-size:26px; line-height:1.0; text-align:center; padding:0 10px; }
-    .cat .num{ font-size:28px; margin-top:6px; }
+    .cat .name{ font-size:30px; line-height:1.0; text-align:center; padding:0 10px; }
+    .cat .num{ font-size:32px; margin-top:6px; }
 
     /* כרטיסי שאלות */
     .cell{
@@ -197,6 +197,27 @@
       color: rgba(255,255,255,.45);
     }
 
+    /* משבצת שאין לה שאלה עדיין */
+    .cell.empty{
+      background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
+      border:1px dashed rgba(255,255,255,.18);
+      cursor:not-allowed;
+      box-shadow:none;
+      position:relative;
+      filter:none;
+    }
+    .cell.empty::after{ content:""; }
+    .emptyMark{
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:950;
+      font-size:34px;
+      color: rgba(255,255,255,.35);
+      user-select:none;
+    }
+
     /* עמודת רמות */
     .lvl{
       height:78px;
@@ -207,7 +228,7 @@
       align-items:center;
       justify-content:center;
       font-weight:950;
-      font-size:30px;
+      font-size:36px;
       user-select:none;
       box-shadow: 0 12px 20px rgba(0,0,0,.22);
       color: rgba(255,255,255,.86);
@@ -364,6 +385,7 @@
 
   // מצב "נלקח" נשמר בדפדפן
   const STORAGE_KEY = "quiz_used_ids_v3";
+  // נטען שמירה מהדפדפן, אבל נסנן אותה אחרי שטוענים את השאלות (כדי לא להיתקע על "נלקח" לנצח)
   let usedIds = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"));
 
   const boardEl = document.getElementById("board");
@@ -409,6 +431,10 @@
     return errors;
   }
 
+  function hasQuestion(category, difficulty) {
+    return questions.some(q => q.category===category && q.difficulty===difficulty);
+  }
+
   function firstAvailable(category, difficulty) {
     return questions.find(q => q.category===category && q.difficulty===difficulty && !usedIds.has(q.id)) || null;
   }
@@ -440,10 +466,18 @@
     for (const lvl of levels) {
       for (const c of categories) {
         const q = firstAvailable(c, lvl);
+        const exists = hasQuestion(c, lvl);
+
         const cell = document.createElement("div");
         cell.className = "cell";
 
-        if (!q) {
+        if (!exists) {
+          // אין בכלל שאלה לצירוף הזה (עדיין לא מילאת ב-config) → מציגים "—" ולא "נלקח"
+          cell.classList.add("empty");
+          cell.setAttribute("aria-disabled", "true");
+          cell.innerHTML = `<div class="emptyMark">—</div>`;
+        } else if (!q) {
+          // יש שאלה אבל היא כבר נלקחה
           cell.classList.add("used");
         } else {
           cell.onclick = () => openQuestion(q, cell);
@@ -599,6 +633,11 @@
 
     // שאלות
     questions = Array.isArray(cfg.questions) ? cfg.questions : [];
+
+    // מסננים שמירות ישנות: שומרים רק ids שקיימים בקובץ השאלות הנוכחי
+    const validIds = new Set(questions.map(q => q.id));
+    usedIds = new Set([...usedIds].filter(id => validIds.has(id)));
+    saveUsed();
 
     // קטגוריות: אם הוגדרו במפורש – לפי הסדר הזה. אחרת נגזר מהשאלות.
     categories = Array.isArray(cfg.categories) && cfg.categories.length
