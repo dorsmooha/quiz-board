@@ -4,47 +4,151 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>לוח חידון</title>
+
   <style>
-    body { margin:0; font-family: system-ui, Arial; background:#0b1220; color:#e8eefc; }
-    header { display:flex; gap:12px; align-items:center; justify-content:space-between; padding:16px 20px; }
-    .btn { background:#1f2a44; color:#e8eefc; border:1px solid #2b3a60; padding:10px 12px; border-radius:10px; cursor:pointer; }
-    .btn:hover { filter:brightness(1.1); }
-    .wrap { padding: 0 20px 20px; }
-    .grid { display:grid; grid-template-columns: 140px repeat(auto-fit, minmax(160px, 1fr)); gap:12px; }
-    .cell, .hdr, .rowhdr { border:1px solid #2b3a60; border-radius:14px; padding:14px; background:#121b2e; }
-    .hdr { background:#0f1730; font-weight:700; text-align:center; }
-    .rowhdr { background:#0f1730; font-weight:700; display:flex; align-items:center; justify-content:center; }
-    .cell { cursor:pointer; text-align:center; font-size:22px; font-weight:800; }
-    .cell:hover { outline:2px solid #4c6fff; }
-    .used { opacity:.35; cursor:not-allowed; }
-    .modalback { position:fixed; inset:0; background: rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; padding:18px; }
-    .modal { width:min(900px, 96vw); background:#0f1730; border:1px solid #2b3a60; border-radius:18px; padding:18px; }
-    .modal h2 { margin:0 0 10px; font-size:22px; }
-    .items { margin:12px 0; display:flex; flex-wrap:wrap; gap:10px; }
-    .pill { background:#121b2e; border:1px solid #2b3a60; padding:10px 12px; border-radius:999px; }
-    .answer { display:none; margin-top:12px; border-top:1px solid #2b3a60; padding-top:12px; }
-    .meta { opacity:.8; font-size:14px; }
+    :root{
+      --bg:#ffffff;
+      --title:#0b0b0b;
+      --cat:#cfe6bf;
+      --card:#3f6fbf;
+      --cardBorder:#2b4f8a;
+      --level:#bfbfbf;
+      --levelBorder:#8f8f8f;
+      --text:#111;
+    }
+    body{ margin:0; font-family: system-ui, Arial; background:var(--bg); color:var(--text); }
+    .wrap{ width: min(1120px, 96vw); margin: 22px auto; }
+
+    /* כותרת עליונה */
+    .topTitle{
+      background: var(--title);
+      color:#fff;
+      border-radius:14px;
+      padding:18px 14px;
+      text-align:center;
+      font-size:44px;
+      font-weight:900;
+      letter-spacing: .5px;
+      margin-bottom: 18px;
+    }
+
+    /* כפתורים למעלה */
+    .topActions{
+      display:flex;
+      gap:12px;
+      justify-content:flex-start;
+      margin-bottom: 14px;
+    }
+    .btn{
+      background:#0f1730;
+      color:#fff;
+      border:1px solid #0f1730;
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .btn:hover{ filter:brightness(1.05); }
+
+    /* לוח */
+    .board{
+      display:grid;
+      grid-template-columns: repeat(var(--cols), 1fr) 90px; /* קטגוריות + עמודת רמות */
+      gap:18px 18px;
+      align-items:start;
+    }
+
+    /* עיגולי קטגוריות */
+    .cat{
+      height:120px;
+      border-radius:60px;
+      background:var(--cat);
+      border:2px solid #3b5a45;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      user-select:none;
+    }
+    .cat .name{ font-size:26px; line-height:1.0; }
+    .cat .num{ font-size:28px; margin-top:6px; }
+
+    /* כרטיסי שאלות */
+    .cell{
+      height:78px;
+      border-radius:14px;
+      background:var(--card);
+      border:2px solid var(--cardBorder);
+      cursor:pointer;
+    }
+    .cell:hover{ filter:brightness(1.05); }
+    .cell.used{
+      background:#e6e6e6;
+      border-color:#cfcfcf;
+      cursor:not-allowed;
+      filter:none;
+    }
+
+    /* עמודת רמות */
+    .lvl{
+      height:78px;
+      border-radius:12px;
+      background:var(--level);
+      border:2px solid var(--levelBorder);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      font-size:30px;
+      user-select:none;
+    }
+    .lvlSpacer{ height:120px; }
+
+    /* מודאל שאלה */
+    .modalback{ position:fixed; inset:0; background: rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; padding:18px; }
+    .modal{
+      width:min(900px, 96vw);
+      background:#fff;
+      border:2px solid #111;
+      border-radius:18px;
+      padding:18px;
+    }
+    .modal h2{ margin:0 0 10px; font-size:28px; }
+    .meta{ opacity:.75; font-size:14px; margin-bottom:10px; }
+    .items{ margin:12px 0; display:flex; flex-wrap:wrap; gap:10px; }
+    .pill{ background:#f3f3f3; border:1px solid #cfcfcf; padding:10px 12px; border-radius:999px; font-weight:700; }
+    .answer{ display:none; margin-top:12px; border-top:1px solid #ddd; padding-top:12px; }
+    .modalTop{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+
+    @media (max-width: 900px){
+      .topTitle{ font-size:34px; }
+      .cat{ height:100px; border-radius:50px; }
+      .cat .name{ font-size:20px; }
+      .cat .num{ font-size:22px; }
+      .cell, .lvl{ height:68px; }
+      .board{ grid-template-columns: repeat(var(--cols), 1fr) 74px; gap:14px; }
+    }
   </style>
 </head>
+
 <body>
-  <header>
-    <div style="display:flex; gap:10px; align-items:center;">
-      <div style="font-weight:900; font-size:18px;">לוח החידון</div>
-      <div class="meta" id="meta"></div>
-    </div>
-    <div style="display:flex; gap:10px;">
+  <div class="wrap">
+
+    <div class="topActions">
       <button class="btn" id="fsBtn">מסך מלא</button>
       <button class="btn" id="resetBtn">איפוס משחק</button>
     </div>
-  </header>
 
-  <div class="wrap">
-    <div class="grid" id="board"></div>
+    <div class="topTitle" id="gameTitle">נושא</div>
+
+    <div class="board" id="board"></div>
+
   </div>
 
   <div class="modalback" id="modalBack">
     <div class="modal" role="dialog" aria-modal="true">
-      <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+      <div class="modalTop">
         <div>
           <h2 id="qTitle"></h2>
           <div class="meta" id="qMeta"></div>
@@ -57,31 +161,42 @@
       <button class="btn" id="toggleAnswerBtn">הצג תשובה</button>
 
       <div class="answer" id="answerBox">
-        <div style="font-weight:800; margin-bottom:8px;">התשובה (הסדר הנכון):</div>
+        <div style="font-weight:900; margin-bottom:8px;">התשובה (הסדר הנכון):</div>
         <div class="items" id="qAnswer"></div>
       </div>
     </div>
   </div>
 
 <script>
-  // הקטגוריות ייקבעו לפי קובץ השאלות בהמשך
+  // התחלה: רמות קושי (אפשר לשנות בעתיד)
   const levels = [3,4,5,6];
 
-  // שאלות לדוגמה זמניות (נחליף בקובץ נפרד)
+  // כרגע שאלות דמו כדי שתראה את העיצוב.
+  // בהמשך נעביר לקובץ questions.json כדי שתערוך רק שאלות.
   const questions = [
     {
-      id:"demo-geo-3",
-      category:"גאוגרפיה",
+      id:"demo-cat1-3",
+      category:"קטגוריה 1",
       difficulty:3,
       prompt:"סדר את הערים מצפון לדרום:",
       items:["חיפה","תל אביב","ירושלים","באר שבע"],
       answer:["חיפה","תל אביב","ירושלים","באר שבע"]
+    },
+    {
+      id:"demo-cat2-4",
+      category:"קטגוריה 2",
+      difficulty:4,
+      prompt:"סדר את המפורסמים מהגבוה לנמוך:",
+      items:["א","ב","ג","ד"],
+      answer:["ב","ד","א","ג"]
     }
   ];
 
+  // קטגוריות נגזרות מהשאלות (כך שהקטגוריות מתחלפות אוטומטית)
   const categories = [...new Set(questions.map(q => q.category))];
 
-  const STORAGE_KEY = "quiz_used_ids_v1";
+  // מצב "נלקח" נשמר בדפדפן
+  const STORAGE_KEY = "quiz_used_ids_v2";
   let usedIds = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"));
   let currentQ = null;
 
@@ -93,11 +208,9 @@
   const qAnswer = document.getElementById("qAnswer");
   const answerBox = document.getElementById("answerBox");
   const toggleAnswerBtn = document.getElementById("toggleAnswerBtn");
-  const meta = document.getElementById("meta");
 
   function saveUsed() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...usedIds]));
-    meta.textContent = `נלקחו: ${usedIds.size}`;
   }
 
   function firstAvailable(category, difficulty) {
@@ -106,24 +219,29 @@
 
   function renderBoard() {
     boardEl.innerHTML = "";
+    boardEl.style.setProperty("--cols", categories.length);
 
-    const corner = document.createElement("div");
-    corner.className = "hdr";
-    boardEl.appendChild(corner);
+    // שורת קטגוריות (עיגולים)
+    // מספרים יורדים כמו בדוגמה (6..1) לפי כמות הקטגוריות
+    for (let i = 0; i < categories.length; i++) {
+      const c = categories[i];
 
-    for (const c of categories) {
-      const h = document.createElement("div");
-      h.className = "hdr";
-      h.textContent = c;
-      boardEl.appendChild(h);
+      const cat = document.createElement("div");
+      cat.className = "cat";
+
+      const num = categories.length - i;
+      cat.innerHTML = `<div class="name">${c}</div><div class="num">${num}</div>`;
+
+      boardEl.appendChild(cat);
     }
 
-    for (const lvl of levels) {
-      const r = document.createElement("div");
-      r.className = "rowhdr";
-      r.textContent = lvl;
-      boardEl.appendChild(r);
+    // רווח מול עמודת הרמות
+    const spacer = document.createElement("div");
+    spacer.className = "lvlSpacer";
+    boardEl.appendChild(spacer);
 
+    // שורות כרטיסים + רמה מימין
+    for (const lvl of levels) {
       for (const c of categories) {
         const q = firstAvailable(c, lvl);
         const cell = document.createElement("div");
@@ -131,19 +249,24 @@
 
         if (!q) {
           cell.classList.add("used");
-          cell.textContent = "—";
         } else {
-          cell.textContent = lvl;
           cell.onclick = () => openQuestion(q);
         }
 
         boardEl.appendChild(cell);
       }
+
+      const lvlBox = document.createElement("div");
+      lvlBox.className = "lvl";
+      lvlBox.textContent = lvl;
+      boardEl.appendChild(lvlBox);
     }
   }
 
   function openQuestion(q) {
     currentQ = q;
+
+    // ננעל מיד כשפותחים (כמו משחק לוח)
     usedIds.add(q.id);
     saveUsed();
     renderBoard();
@@ -155,7 +278,6 @@
 
     answerBox.style.display = "none";
     toggleAnswerBtn.textContent = "הצג תשובה";
-
     modalBack.style.display = "flex";
   }
 
@@ -184,7 +306,12 @@
     else await document.exitFullscreen();
   };
 
-  saveUsed();
+  // מקשים נוחים על מקרן
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+    if (e.key === "Enter" && modalBack.style.display === "flex") toggleAnswerBtn.click();
+  });
+
   renderBoard();
 </script>
 </body>
