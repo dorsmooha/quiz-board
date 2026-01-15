@@ -54,7 +54,7 @@
         linear-gradient(180deg, var(--bgTop), var(--bgBottom));
       min-height:100vh;
     }
-    .wrap{ width: min(1120px, 96vw); margin: 22px auto; }
+    .wrap{ width: min(1400px, 98vw); margin: 18px auto; }
 
     /* קונטיינר עדין שנותן תחושת "לוח" */
     .panel{
@@ -106,15 +106,15 @@
     /* לוח: קטגוריות "בועות" למעלה + עמודת רמות מימין */
     .board{
       display:grid;
-      grid-template-columns: repeat(var(--cols), 1fr) 96px; /* קטגוריות + עמודת רמות */
-      gap:18px 18px;
+      grid-template-columns: repeat(var(--cols), 1fr) clamp(84px, 8vw, 120px);
+      gap: clamp(12px, 1.6vw, 18px);
       align-items:start;
     }
 
     /* עיגולי קטגוריות */
     .cat{
-      height:120px;
-      border-radius:60px;
+      height: clamp(108px, 12.5vh, 160px);
+      border-radius: 999px;
       background: linear-gradient(135deg, var(--catGrad1), var(--catGrad2));
       border:1px solid var(--catBorder);
       display:flex;
@@ -137,12 +137,12 @@
       transform: rotate(18deg);
       pointer-events:none;
     }
-    .cat .name{ font-size:30px; line-height:1.0; text-align:center; padding:0 10px; }
-    .cat .num{ font-size:32px; margin-top:6px; }
+    .cat .name{ font-size:34px; line-height:1.05; text-align:center; padding:0 14px; }
+    .cat .num{ display:none; }
 
     /* כרטיסי שאלות */
     .cell{
-      height:78px;
+      height: clamp(74px, 10.5vh, 112px);
       border-radius:18px;
       background: linear-gradient(135deg, rgba(59,130,246,.95), rgba(29,78,216,.95));
       border:1px solid rgba(255,255,255,.20);
@@ -220,7 +220,7 @@
 
     /* עמודת רמות */
     .lvl{
-      height:78px;
+      height: clamp(74px, 10.5vh, 112px);
       border-radius:18px;
       background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
       border:1px solid rgba(255,255,255,.16);
@@ -233,30 +233,41 @@
       box-shadow: 0 12px 20px rgba(0,0,0,.22);
       color: rgba(255,255,255,.86);
     }
-    .lvlSpacer{ height:120px; }
+    .lvlSpacer{ height: clamp(108px, 12.5vh, 160px); }
 
     /* מודאל שאלה */
-    .modalback{ position:fixed; inset:0; background: rgba(0,0,0,.62); display:none; align-items:center; justify-content:center; padding:18px; }
+    .modalback{ position:fixed; inset:0; background: rgba(0,0,0,.58); display:none; align-items:center; justify-content:center; padding:14px; }
 
     /* Motion: modal open/close */
     @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-    @keyframes popIn { from { transform: translateY(18px) scale(.96); opacity:0; } to { transform: translateY(0) scale(1); opacity:1; } }
+    @keyframes popIn {
+      from { transform: translate(var(--fromX, 0px), var(--fromY, 18px)) scale(.18); opacity:0; }
+      to   { transform: translate(0,0) scale(1); opacity:1; }
+    }
+    @keyframes popOut {
+      from { transform: translate(0,0) scale(1); opacity:1; }
+      to   { transform: translate(var(--fromX, 0px), var(--fromY, 18px)) scale(.18); opacity:0; }
+    }
 
     .modalback.show{ display:flex; animation: fadeIn .18s var(--ease) both; }
     .modal{
-      width:min(900px, 96vw);
-      background: rgba(15, 23, 42, .72);
-      color: rgba(255,255,255,.92);
+      width: min(1500px, 96vw);
+      height: 92vh;
+      background: rgba(15, 23, 42, .62);
+      color: rgba(255,255,255,.95);
       border:1px solid rgba(255,255,255,.14);
-      border-radius:22px;
+      border-radius:28px;
       padding:18px;
       box-shadow: var(--shadow);
-      backdrop-filter: blur(12px);
-      animation: popIn .22s var(--ease) both;
+      backdrop-filter: blur(14px);
+      animation: popIn .26s var(--ease) both;
+      display:flex;
+      flex-direction:column;
     }
+    .modal.closing{ animation: popOut .22s var(--ease) both; }
     .modal h2{ margin:0 0 10px; font-size:28px; }
     .meta{ opacity:.75; font-size:14px; margin-bottom:10px; color: var(--muted); }
-    .items{ margin:12px 0; display:flex; flex-wrap:wrap; gap:10px; }
+    .items{ margin:18px 0; display:flex; flex-direction:column; gap:14px; }
     .items.vertical{ flex-direction:column; align-items:stretch; }
     .items.vertical .pill{
       background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
@@ -301,6 +312,40 @@
     .brand svg{ width:18px; height:18px; opacity:.9; }
     .brand span{ font-weight:900; color: rgba(255,255,255,.78); }
     .modalTop{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+
+    /* Full-screen layout inside modal */
+    .modalGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 10px;
+      flex: 1;
+      min-height: 0;
+    }
+    .pane{
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      box-shadow: 0 14px 30px rgba(0,0,0,.28);
+      padding: 14px;
+      overflow: auto;
+      min-height: 0;
+    }
+    .paneTitle{ font-weight:950; opacity:.9; margin-bottom: 10px; font-size: 18px; }
+    .answerHint{
+      color: rgba(255,255,255,.70);
+      font-weight:800;
+      line-height:1.4;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,.18);
+      background: rgba(255,255,255,.04);
+    }
+    .rightPane.revealed #answerHint{ display:none; }
+
+    @media (max-width: 900px){
+      .modalGrid{ grid-template-columns: 1fr; }
+    }
 
     @media (max-width: 900px){
       .topTitle{ font-size:34px; }
@@ -347,7 +392,7 @@
   </div>
 
   <div class="modalback" id="modalBack">
-    <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal" id="modal" role="dialog" aria-modal="true">
       <div class="modalTop">
         <div>
           <h2 id="qTitle"></h2>
@@ -356,22 +401,31 @@
         <button class="btn" id="closeBtn">סגור</button>
       </div>
 
-      <div class="items" id="qItems"></div>
+      <div class="modalGrid">
+        <div class="pane leftPane">
+          <div class="paneTitle">השאלה</div>
+          <div class="items" id="qItems"></div>
 
-      <div class="timerRow" aria-live="polite">
-        <div class="timerPill" id="timerPill">
-          <span class="timerLabel">זמן:</span>
-          <span class="timerVal" id="timerVal">01:00</span>
+          <div class="timerRow" aria-live="polite">
+            <div class="timerPill" id="timerPill">
+              <span class="timerLabel">זמן:</span>
+              <span class="timerVal" id="timerVal">01:00</span>
+            </div>
+            <button class="btn" id="startTimerBtn">התחל טיימר (60ש׳)</button>
+            <button class="btn" id="resetTimerBtn">איפוס טיימר</button>
+          </div>
+
+          <button class="btn" id="toggleAnswerBtn">הצג תשובה</button>
         </div>
-        <button class="btn" id="startTimerBtn">התחל טיימר (60ש׳)</button>
-        <button class="btn" id="resetTimerBtn">איפוס טיימר</button>
-      </div>
 
-      <button class="btn" id="toggleAnswerBtn">הצג תשובה</button>
-
-      <div class="answer" id="answerBox">
-        <div style="font-weight:900; margin-bottom:8px;">התשובה (הסדר הנכון):</div>
-        <div class="items" id="qAnswer"></div>
+        <div class="pane rightPane" id="rightPane">
+          <div class="paneTitle">התשובה</div>
+          <div class="answerHint" id="answerHint">לחצו על "הצג תשובה" כדי לחשוף את הסידור הנכון.</div>
+          <div class="answer" id="answerBox">
+            <div style="font-weight:900; margin-bottom:8px;">הסדר הנכון:</div>
+            <div class="items" id="qAnswer"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -395,6 +449,9 @@
   const qItems = document.getElementById("qItems");
   const qAnswer = document.getElementById("qAnswer");
   const answerBox = document.getElementById("answerBox");
+  const rightPane = document.getElementById("rightPane");
+  const answerHint = document.getElementById("answerHint");
+  const modalEl = document.getElementById("modal");
   const timerVal = document.getElementById("timerVal");
   const timerPill = document.getElementById("timerPill");
   const startTimerBtn = document.getElementById("startTimerBtn");
@@ -453,7 +510,7 @@
         ? CONFIG.categoryNumbers[c]
         : (categories.length - i);
 
-      cat.innerHTML = `<div class="name">${c}</div><div class="num">${num}</div>`;
+      cat.innerHTML = `<div class="name">${c}</div>`;
       boardEl.appendChild(cat);
     }
 
@@ -494,6 +551,16 @@
   }
 
   function openQuestion(q, sourceEl) {
+    // אנימציה: המודאל "גדל" מהמשבצת שנלחצה
+    if (sourceEl && modalEl) {
+      const r = sourceEl.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const vx = window.innerWidth / 2;
+      const vy = window.innerHeight / 2;
+      modalEl.style.setProperty('--fromX', `${cx - vx}px`);
+      modalEl.style.setProperty('--fromY', `${cy - vy}px`);
+    }
     // Glow קצר על התא שנלחץ
     if (sourceEl) {
       sourceEl.classList.add("glow");
@@ -515,6 +582,9 @@
     qAnswer.classList.add("vertical");
     qAnswer.innerHTML = q.answer.map((x,i) => `<div class="pill"><span class="idx">${i+1}.</span><span>${x}</span></div>`).join("");
 
+    rightPane.classList.remove('revealed');
+    answerHint.style.display = 'block';
+
     answerBox.style.display = "none";
     answerBox.classList.remove("show");
     toggleAnswerBtn.textContent = "הצג תשובה";
@@ -528,6 +598,16 @@
 
   function closeModal() {
     stopTimer();
+
+    if (modalEl) {
+      modalEl.classList.add('closing');
+      setTimeout(() => {
+        modalEl.classList.remove('closing');
+        modalBack.classList.remove("show");
+      }, 220);
+      return;
+    }
+
     modalBack.classList.remove("show");
   }
 
@@ -540,6 +620,8 @@
     if (shown) {
       answerBox.style.display = "none";
       answerBox.classList.remove("show");
+      rightPane.classList.remove('revealed');
+      answerHint.style.display = 'block';
       toggleAnswerBtn.textContent = "הצג תשובה";
       return;
     }
@@ -547,6 +629,8 @@
     // הצג + אנימציה מדורגת לפריטים
     answerBox.style.display = "block";
     answerBox.classList.add("show");
+    rightPane.classList.add('revealed');
+    answerHint.style.display = 'none';
 
     const pills = qAnswer.querySelectorAll(".pill");
     pills.forEach((p, i) => {
